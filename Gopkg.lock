@@ -57,7 +57,7 @@
     "responses",
     "serializer"
   ]
-  revision = "56cf9cd508f041365eacf2a7f7b17bc0b17115dd"
+  revision = "2bc40e936f108d4d393b279eef6ecce71b32513d"
 
 [[projects]]
   name = "github.com/mattn/go-isatty"
