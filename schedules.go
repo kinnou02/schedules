@@ -45,9 +45,7 @@ func RouteScheduleHandler(kraken *gonavitia.Kraken) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err})
 			return
 		}
-		for _, fu := range c.QueryArray("forbidden_uris[]") {
-			request.ForbiddenUris = append(request.ForbiddenUris, fu)
-		}
+		request.ForbiddenUris = append(request.ForbiddenUris, c.QueryArray("forbidden_uris[]")...)
 		log.Printf("forbidden: %+v", request.ForbiddenUris)
 		request.StopArea = c.Param("stop_area")
 		pb_req := BuildRequestRouteSchedule(request)
@@ -82,9 +80,7 @@ func BuildRequestRouteSchedule(req RouteScheduleRequest) *pbnavitia.Request {
 		},
 		XCurrentDatetime: proto.Uint64(uint64(req.CurrentDatetime.Unix())),
 	}
-	for _, fu := range req.ForbiddenUris {
-		pb_req.NextStopTimes.ForbiddenUri = append(pb_req.NextStopTimes.ForbiddenUri, fu)
-	}
+	pb_req.NextStopTimes.ForbiddenUri = append(pb_req.NextStopTimes.ForbiddenUri, req.ForbiddenUris...)
 
 	return pb_req
 }

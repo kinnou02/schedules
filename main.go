@@ -6,13 +6,14 @@ import (
 	"os"
 	"time"
 
+	_ "net/http/pprof"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/contrib/ginrus"
 	"github.com/gin-gonic/gin"
 	"github.com/kinnou02/gonavitia"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
-	_ "net/http/pprof"
 )
 
 func setupRouter() *gin.Engine {
