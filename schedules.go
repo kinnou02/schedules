@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -21,9 +21,9 @@ type RouteScheduleRequest struct {
 	Duration         time.Duration `form:"duration"`
 	ForbiddenUris    []string      //mapping with Binding doesn't work
 	Depth            int32         `form:"depth"`
-	StopArea         string
-	CurrentDatetime  time.Time `form:"_current_datetime"`
+	CurrentDatetime  time.Time     `form:"_current_datetime"`
 	ItemsPerSchedule int32
+	Filters          []string
 }
 
 func NewRouteScheduleRequest() RouteScheduleRequest {
@@ -37,32 +37,20 @@ func NewRouteScheduleRequest() RouteScheduleRequest {
 	}
 }
 
-func RouteScheduleHandler(kraken *gonavitia.Kraken) gin.HandlerFunc {
-	fn := func(c *gin.Context) {
-		request := NewRouteScheduleRequest()
-		if err := c.ShouldBindQuery(&request); err != nil {
-			log.Errorf("FATAL: %+v\n", err)
-			c.JSON(http.StatusBadRequest, gin.H{"error": err})
-			return
-		}
-		request.ForbiddenUris = append(request.ForbiddenUris, c.QueryArray("forbidden_uris[]")...)
-		log.Printf("forbidden: %+v", request.ForbiddenUris)
-		request.StopArea = c.Param("stop_area")
-		pb_req := BuildRequestRouteSchedule(request)
-		resp, err := kraken.Call(pb_req)
-		if err != nil {
-			log.Errorf("FATAL: %+v\n", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err})
-			return
-		}
-		r := serializer.NewRouteSchedulesResponse(resp)
-		c.JSON(http.StatusOK, r)
+func RouteSchedule(c *gin.Context, kraken *gonavitia.Kraken, request *RouteScheduleRequest) {
+	pb_req := BuildRequestRouteSchedule(*request)
+	resp, err := kraken.Call(pb_req)
+	if err != nil {
+		log.Errorf("FATAL: %+v\n", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
 	}
-	return gin.HandlerFunc(fn)
+	r := serializer.NewRouteSchedulesResponse(resp)
+	c.JSON(http.StatusOK, r)
 }
 
 func BuildRequestRouteSchedule(req RouteScheduleRequest) *pbnavitia.Request {
-	departureFilter := fmt.Sprintf("stop_area.uri=%s", req.StopArea)
+	departureFilter := strings.Join(req.Filters, "and ")
 	pb_req := &pbnavitia.Request{
 		RequestedApi: pbnavitia.API_ROUTE_SCHEDULES.Enum(),
 		NextStopTimes: &pbnavitia.NextStopTimeRequest{
