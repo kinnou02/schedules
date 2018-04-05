@@ -63,7 +63,7 @@ func main() {
 	}()
 
 	r := setupRouter()
-	r.GET("/v1/*filter", NoRouteHandler(kraken))
+	r.GET("/v1/coverage/:coverage/*filter", NoRouteHandler(kraken))
 	// Listen and Server in 0.0.0.0:8080
 	err := r.Run(*listen)
 	if err != nil {

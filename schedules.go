@@ -14,15 +14,15 @@ import (
 )
 
 type RouteScheduleRequest struct {
-	FromDatetime     time.Time     `form:"from_datetime" time_format:"20060102150405" binding:"required"`
-	DisableGeojson   bool          `form:"disable_geojson"`
-	StartPage        int32         `form:"start_page"`
-	Count            int32         `form:"count"`
-	Duration         time.Duration `form:"duration"`
-	ForbiddenUris    []string      //mapping with Binding doesn't work
-	Depth            int32         `form:"depth"`
-	CurrentDatetime  time.Time     `form:"_current_datetime"`
-	ItemsPerSchedule int32
+	FromDatetime     time.Time `form:"from_datetime" time_format:"20060102T150405" binding:"required"`
+	DisableGeojson   bool      `form:"disable_geojson"`
+	StartPage        int32     `form:"start_page"`
+	Count            int32     `form:"count"`
+	Duration         int32     `form:"duration"`
+	ForbiddenUris    []string  //mapping with Binding doesn't work
+	Depth            int32     `form:"depth"`
+	CurrentDatetime  time.Time `form:"_current_datetime"`
+	ItemsPerSchedule int32     `form:"items_per_schedule"`
 	Filters          []string
 }
 
@@ -30,7 +30,7 @@ func NewRouteScheduleRequest() RouteScheduleRequest {
 	return RouteScheduleRequest{
 		StartPage:        0,
 		Count:            10,
-		Duration:         24 * time.Hour,
+		Duration:         86400,
 		CurrentDatetime:  time.Now(),
 		Depth:            2,
 		ItemsPerSchedule: 10000,
@@ -42,7 +42,7 @@ func RouteSchedule(c *gin.Context, kraken *gonavitia.Kraken, request *RouteSched
 	resp, err := kraken.Call(pb_req)
 	if err != nil {
 		log.Errorf("FATAL: %+v\n", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": err})
 		return
 	}
 	r := serializer.NewRouteSchedulesResponse(resp)
@@ -57,7 +57,7 @@ func BuildRequestRouteSchedule(req RouteScheduleRequest) *pbnavitia.Request {
 			DepartureFilter:  proto.String(departureFilter),
 			ArrivalFilter:    proto.String(""),
 			FromDatetime:     proto.Uint64(uint64(req.FromDatetime.Unix())),
-			Duration:         proto.Int32(int32(req.Duration.Seconds())),
+			Duration:         proto.Int32(req.Duration),
 			Depth:            proto.Int32(req.Depth),
 			NbStoptimes:      proto.Int32(req.Count),
 			Count:            proto.Int32(req.Count),
