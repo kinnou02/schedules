@@ -21,3 +21,4 @@ The test can be run with the following command:
 make ci
 ```
 
+test
