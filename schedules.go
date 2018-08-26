@@ -23,6 +23,7 @@ type RouteScheduleRequest struct {
 	Depth            int32     `form:"depth"`
 	CurrentDatetime  time.Time `form:"_current_datetime"`
 	ItemsPerSchedule int32     `form:"items_per_schedule"`
+	DataFreshness    string    `form:"data_freshness"`
 	Filters          []string
 }
 
@@ -34,6 +35,7 @@ func NewRouteScheduleRequest() RouteScheduleRequest {
 		CurrentDatetime:  time.Now(),
 		Depth:            2,
 		ItemsPerSchedule: 10000,
+		DataFreshness:    "base_schedudle",
 	}
 }
 
@@ -41,7 +43,7 @@ func RouteSchedule(c *gin.Context, kraken *gonavitia.Kraken, request *RouteSched
 	pb_req := BuildRequestRouteSchedule(*request)
 	resp, err := kraken.Call(pb_req)
 	if err != nil {
-		log.Errorf("FATAL: %+v\n", err)
+		log.Errorf("Error while calling kraken: %+v\n", err)
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": err})
 		return
 	}
@@ -51,6 +53,7 @@ func RouteSchedule(c *gin.Context, kraken *gonavitia.Kraken, request *RouteSched
 
 func BuildRequestRouteSchedule(req RouteScheduleRequest) *pbnavitia.Request {
 	departureFilter := strings.Join(req.Filters, "and ")
+	//TODO handle Realtime level from request
 	pb_req := &pbnavitia.Request{
 		RequestedApi: pbnavitia.API_ROUTE_SCHEDULES.Enum(),
 		NextStopTimes: &pbnavitia.NextStopTimeRequest{
